@@ -4,16 +4,24 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.apache.poi.xssf.usermodel.XSSFRow;
+import org.apache.poi.xssf.usermodel.XSSFSheet;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.example.collectionsample.collection.dto.TargetCollectionDTO;
+import com.example.collectionsample.collection.entity.Collection;
 
 import lombok.Data;
 
 @Service
 public class CollectionService {
+    @Autowired
+    private CollectionRepository collectionRepository;
 
     public ResponseEntity<Object> findCollectionTarget(String date) {
         List<collectionList> collectionList = new ArrayList<>();
@@ -43,6 +51,44 @@ public class CollectionService {
         response.setPendingCustomers(target.get(0).getPendingCustomers());
 
         return ResponseEntity.status(HttpStatus.OK).body(response);
+    }
+
+    public ResponseEntity<Object> uploadCollections(MultipartFile multipartFile) {
+        try {
+            XSSFWorkbook workbook = new XSSFWorkbook(multipartFile.getInputStream());
+            XSSFSheet worksheet = workbook.getSheet("Sheet1");
+
+            List<Collection> collections = new ArrayList<>();
+
+            for (var i = 1; i < worksheet.getPhysicalNumberOfRows(); i++) {
+                XSSFRow row = worksheet.getRow(i);
+
+                // Prepare collection data
+                Collection collection = new Collection();
+                collection.setProspectId((String) row.getCell(0).getStringCellValue());
+                collection.setGroupId((String) row.getCell(2).getStringCellValue());
+                collection.setProductType((String) row.getCell(4).getStringCellValue());
+                collection.setLoanAccNumber((Long) Math.round(row.getCell(7).getNumericCellValue()));
+                collection.setLoanAmount((double) Math.round(row.getCell(13).getNumericCellValue()));
+                collection.setEmiAmount((double) Math.round(row.getCell(14).getNumericCellValue()));
+                collection.setIntEmiAmount((double) Math.round(row.getCell(14).getNumericCellValue()));
+                collection.setDpd((double) Math.round(row.getCell(15).getNumericCellValue()));
+                collection.setDpdAmount((double) Math.round(row.getCell(16).getNumericCellValue()));
+                collection.setOsBalance((double) Math.round(row.getCell(17).getNumericCellValue()));
+                collection.setFoId((String) row.getCell(19).getStringCellValue());
+                collection.setBmId((String) row.getCell(21).getStringCellValue());
+                collection.setEmiStatus((String) row.getCell(26).getStringCellValue());
+                collection.setEmiCollected((double) Math.round(row.getCell(27).getNumericCellValue()));
+                collections.add(collection);
+            }
+
+            collectionRepository.saveAll(collections);
+            workbook.close();
+            return ResponseEntity.status(HttpStatus.OK).body("Collection uploaded successfully");
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error:" + e.getMessage());
+        }
+
     }
 
 }

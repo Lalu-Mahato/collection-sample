@@ -32,6 +32,7 @@ public class Group {
     private String foId;
     private String groupName;
     private String localId;
+    private String emiStatus;
     private String localeName;
     private String productType;
 

@@ -89,7 +89,7 @@ public class CollectionService {
                 collection.setOsBalance((double) Math.round(row.getCell(17).getNumericCellValue()));
                 collection.setFoId((String) row.getCell(19).getStringCellValue());
                 collection.setBmId((String) row.getCell(21).getStringCellValue());
-                collection.setEmiStatus((String) row.getCell(26).getStringCellValue());
+                collection.setEmiStatus((String) (row.getCell(26).getStringCellValue()).toLowerCase());
                 collection.setEmiCollected((double) Math.round(row.getCell(27).getNumericCellValue()));
                 collections.add(collection);
 
@@ -104,6 +104,7 @@ public class CollectionService {
                 group.setFoId((String) row.getCell(19).getStringCellValue());
                 group.setBmId((String) row.getCell(21).getStringCellValue());
                 group.setCentreName((String) row.getCell(23).getStringCellValue());
+                group.setEmiStatus((String) (row.getCell(26).getStringCellValue()).toLowerCase());
                 groups.add(group);
 
                 // Prepare prospect data

@@ -15,6 +15,8 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.example.collectionsample.collection.dto.TargetCollectionDTO;
 import com.example.collectionsample.collection.entity.Collection;
+import com.example.collectionsample.group.GroupRepository;
+import com.example.collectionsample.group.entity.Group;
 
 import lombok.Data;
 
@@ -22,6 +24,9 @@ import lombok.Data;
 public class CollectionService {
     @Autowired
     private CollectionRepository collectionRepository;
+
+    @Autowired
+    private GroupRepository groupRepository;
 
     public ResponseEntity<Object> findCollectionTarget(String date) {
         List<collectionList> collectionList = new ArrayList<>();
@@ -59,6 +64,7 @@ public class CollectionService {
             XSSFSheet worksheet = workbook.getSheet("Sheet1");
 
             List<Collection> collections = new ArrayList<>();
+            List<Group> groups = new ArrayList<>();
 
             for (var i = 1; i < worksheet.getPhysicalNumberOfRows(); i++) {
                 XSSFRow row = worksheet.getRow(i);
@@ -80,11 +86,25 @@ public class CollectionService {
                 collection.setEmiStatus((String) row.getCell(26).getStringCellValue());
                 collection.setEmiCollected((double) Math.round(row.getCell(27).getNumericCellValue()));
                 collections.add(collection);
+
+                // Prepare group data
+                Group group = new Group();
+                group.setGroupId((String) row.getCell(2).getStringCellValue());
+                group.setGroupName((String) row.getCell(3).getStringCellValue());
+                group.setProductType((String) row.getCell(4).getStringCellValue());
+                group.setCentreId((String) row.getCell(9).getStringCellValue());
+                group.setLocaleName((String) row.getCell(10).getStringCellValue());
+                group.setLocalId((String) row.getCell(11).getStringCellValue());
+                group.setFoId((String) row.getCell(19).getStringCellValue());
+                group.setBmId((String) row.getCell(21).getStringCellValue());
+                group.setCentreName((String) row.getCell(23).getStringCellValue());
+                groups.add(group);
             }
 
             collectionRepository.saveAll(collections);
+            groupRepository.saveAll(groups);
             workbook.close();
-            return ResponseEntity.status(HttpStatus.OK).body("Collection uploaded successfully");
+            return ResponseEntity.status(HttpStatus.OK).body(groups);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error:" + e.getMessage());
         }

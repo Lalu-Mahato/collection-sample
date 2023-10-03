@@ -17,6 +17,8 @@ import com.example.collectionsample.collection.dto.TargetCollectionDTO;
 import com.example.collectionsample.collection.entity.Collection;
 import com.example.collectionsample.group.GroupRepository;
 import com.example.collectionsample.group.entity.Group;
+import com.example.collectionsample.prospect.ProspectRepository;
+import com.example.collectionsample.prospect.entity.Prospect;
 
 import lombok.Data;
 
@@ -27,6 +29,9 @@ public class CollectionService {
 
     @Autowired
     private GroupRepository groupRepository;
+
+    @Autowired
+    private ProspectRepository prospectRepository;
 
     public ResponseEntity<Object> findCollectionTarget(String date) {
         List<collectionList> collectionList = new ArrayList<>();
@@ -65,6 +70,7 @@ public class CollectionService {
 
             List<Collection> collections = new ArrayList<>();
             List<Group> groups = new ArrayList<>();
+            List<Prospect> prospects = new ArrayList<>();
 
             for (var i = 1; i < worksheet.getPhysicalNumberOfRows(); i++) {
                 XSSFRow row = worksheet.getRow(i);
@@ -99,12 +105,27 @@ public class CollectionService {
                 group.setBmId((String) row.getCell(21).getStringCellValue());
                 group.setCentreName((String) row.getCell(23).getStringCellValue());
                 groups.add(group);
+
+                // Prepare prospect data
+                Prospect prospect = new Prospect();
+                String groupHead = row.getCell(12).getStringCellValue();
+                prospect.setGrpHead((boolean) Boolean.parseBoolean(groupHead));
+
+                prospect.setProspectId((String) row.getCell(0).getStringCellValue());
+                prospect.setProspectName((String) row.getCell(1).getStringCellValue());
+                prospect.setProspectMobile((Long) Math.round(row.getCell(5).getNumericCellValue()));
+                prospect.setLoanAccNumber((Long) Math.round(row.getCell(7).getNumericCellValue()));
+                prospect.setCifId((Long) Math.round(row.getCell(6).getNumericCellValue()));
+                prospect.setLoanId((String) row.getCell(8).getStringCellValue());
+                prospect.setLoanAmount((double) Math.round(row.getCell(13).getNumericCellValue()));
+                prospects.add(prospect);
             }
 
             collectionRepository.saveAll(collections);
             groupRepository.saveAll(groups);
+            prospectRepository.saveAll(prospects);
             workbook.close();
-            return ResponseEntity.status(HttpStatus.OK).body(groups);
+            return ResponseEntity.status(HttpStatus.OK).body("Data uploaded successfully");
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error:" + e.getMessage());
         }
